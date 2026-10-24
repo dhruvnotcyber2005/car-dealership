@@ -1,0 +1,30 @@
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Secrets and local environment
+.env
+backend/.env
+frontend/.env
+
+# Local databases
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Node
+node_modules/
+dist/
+frontend/dist/
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+*.log
