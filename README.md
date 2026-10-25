@@ -180,7 +180,7 @@ npm run dev
 
 Open `http://localhost:5173`.
 
-Sign in as a customer to browse and purchase. Sign in as the administrator to open **Manage inventory**.
+The sign-in page has two choices. **Sign in or register as customer** is for shoppers. **Sign in as admin** accepts only an administrator account created with `create_admin.py`.
 
 ## API endpoints
 
@@ -265,13 +265,11 @@ These were captured from the running app on 24 October 2026.
 
 ![Create an account](screenshots/register.png)
 
-![Showroom, including a sold-out car](screenshots/showroom.png)
-
-![Search results for Honda](screenshots/search.png)
+![Inventory, including a sold-out car](screenshots/showroom.png)
 
 ![Administrator inventory page](screenshots/admin.png)
 
-The purchase button on the Honda CR-V is disabled because its quantity is zero. The customer account does not see **Manage inventory**. That control appears only after an administrator signs in.
+The purchase button on a sold-out vehicle is disabled. A customer does not see **Manage**. That control appears only after an administrator signs in.
 
 ## If port 8000 will not start
 

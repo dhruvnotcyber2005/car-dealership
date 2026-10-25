@@ -35,36 +35,28 @@ function queryString(filters) {
   return query ? `?${query}` : "";
 }
 
-function CarMark() {
-  return (
-    <svg viewBox="0 0 64 32" className="h-8 w-16 text-brass" aria-hidden="true">
-      <path
-        fill="currentColor"
-        d="M8 20h4l3-7h22l6 7h9a4 4 0 0 1 4 4v2H4v-2a4 4 0 0 1 4-4zm8 6a4 4 0 1 0 0.01 0zm28 0a4 4 0 1 0 0.01 0zM18 14l-2 6h28l-4-6H18z"
-      />
-    </svg>
-  );
-}
+const fieldClass = "mt-1 w-full rounded border border-slate-300 bg-white px-3 py-2";
+const primaryButton = "rounded bg-slate-800 px-3 py-2 text-sm text-white disabled:opacity-50";
+const quietButton = "rounded border border-slate-300 bg-white px-3 py-2 text-sm";
 
 function Notice({ notice, error }) {
   if (!notice && !error) {
     return null;
   }
   return (
-    <div
-      className={`rounded-lg border px-4 py-3 text-sm ${
-        error
-          ? "border-danger/30 bg-red-50 text-danger"
-          : "border-moss/30 bg-emerald-50 text-moss"
+    <p
+      className={`rounded border px-3 py-2 text-sm ${
+        error ? "border-red-200 bg-red-50 text-red-800" : "border-green-200 bg-green-50 text-green-800"
       }`}
       role="status"
     >
       {error || notice}
-    </div>
+    </p>
   );
 }
 
 function AuthScreen({ onSignedIn, initialError = "" }) {
+  const [audience, setAudience] = useState(null);
   const [mode, setMode] = useState("login");
   const [form, setForm] = useState({
     username: "",
@@ -73,6 +65,12 @@ function AuthScreen({ onSignedIn, initialError = "" }) {
   });
   const [error, setError] = useState(initialError);
   const [pending, setPending] = useState(false);
+
+  function choose(nextAudience) {
+    setAudience(nextAudience);
+    setMode("login");
+    setError("");
+  }
 
   function update(event) {
     setForm((current) => ({ ...current, [event.target.name]: event.target.value }));
@@ -99,6 +97,11 @@ function AuthScreen({ onSignedIn, initialError = "" }) {
         auth: false,
         body: { username: form.username.trim(), password: form.password },
       });
+      if (audience === "admin" && session.role !== "admin") {
+        clearSession();
+        setError("This account is not an administrator. Use customer sign-in instead.");
+        return;
+      }
       saveSession(session);
       onSignedIn({
         token: session.access_token,
@@ -113,127 +116,113 @@ function AuthScreen({ onSignedIn, initialError = "" }) {
   }
 
   return (
-    <div className="grid min-h-screen lg:grid-cols-2">
-      <section className="flex flex-col justify-between bg-pine px-8 py-10 text-paper sm:px-12">
-        <div className="flex items-center gap-3">
-          <CarMark />
-          <div>
-            <p className="text-xs uppercase tracking-[0.28em] text-brass">Est. showroom</p>
-            <p className="font-display text-2xl">Ashford Motor Co.</p>
-          </div>
-        </div>
-        <div className="max-w-md py-16">
-          <h1 className="font-display text-5xl leading-tight">
-            A quieter way to see what is on the lot.
-          </h1>
-          <p className="mt-6 text-lg text-paper/80">
-            Browse make, model, and price. Purchase when a car is in stock.
-            Administrators keep the inventory honest.
-          </p>
-        </div>
-        <p className="text-sm text-paper/60">Customer accounts are created from the form. Admin access is issued separately.</p>
-      </section>
+    <main className="mx-auto max-w-md px-4 py-16">
+      <h1 className="text-xl font-semibold">Ashford Motor Co.</h1>
+      <p className="mt-1 text-sm text-slate-600">Choose how you want to continue.</p>
 
-      <section className="flex items-center justify-center px-6 py-12">
-        <div className="w-full max-w-md">
-          <p className="text-sm font-medium uppercase tracking-[0.2em] text-brass-dark">Account</p>
-          <h2 className="mt-2 font-display text-4xl text-ink">
-            {mode === "login" ? "Sign in" : "Create an account"}
-          </h2>
-          <div className="mt-6 grid grid-cols-2 rounded-full bg-line p-1 text-sm">
-            <button
-              type="button"
-              className={`rounded-full px-4 py-2 ${mode === "login" ? "bg-card shadow" : ""}`}
-              onClick={() => setMode("login")}
-            >
-              Sign in
-            </button>
-            <button
-              type="button"
-              className={`rounded-full px-4 py-2 ${mode === "register" ? "bg-card shadow" : ""}`}
-              onClick={() => setMode("register")}
-            >
-              Register
-            </button>
-          </div>
-
-          <form className="mt-8 space-y-4" onSubmit={submit}>
-            <label className="block text-sm font-medium">
-              Username
-              <input
-                required
-                name="username"
-                autoComplete="username"
-                value={form.username}
-                onChange={update}
-                className="mt-1 w-full rounded-lg border border-line bg-card px-3 py-2"
-              />
-            </label>
-            {mode === "register" && (
-              <label className="block text-sm font-medium">
-                Email
-                <input
-                  required
-                  type="email"
-                  name="email"
-                  autoComplete="email"
-                  value={form.email}
-                  onChange={update}
-                  className="mt-1 w-full rounded-lg border border-line bg-card px-3 py-2"
-                />
-              </label>
-            )}
-            <label className="block text-sm font-medium">
-              Password
-              <input
-                required
-                type="password"
-                name="password"
-                autoComplete={mode === "login" ? "current-password" : "new-password"}
-                minLength={8}
-                value={form.password}
-                onChange={update}
-                className="mt-1 w-full rounded-lg border border-line bg-card px-3 py-2"
-              />
-            </label>
-            {error && (
-              <p className="rounded-lg border border-danger/30 bg-red-50 px-3 py-2 text-sm text-danger">
-                {error}
-              </p>
-            )}
-            <button
-              type="submit"
-              disabled={pending}
-              className="w-full rounded-lg bg-pine px-4 py-3 font-medium text-paper disabled:opacity-60"
-            >
-              {pending ? "Please wait…" : mode === "login" ? "Sign in" : "Create account and sign in"}
-            </button>
-          </form>
+      {audience === null ? (
+        <div className="mt-6 space-y-3">
+          <button type="button" className={`${primaryButton} w-full`} onClick={() => choose("customer")}>
+            Sign in or register as customer
+          </button>
+          <button type="button" className={`${quietButton} w-full`} onClick={() => choose("admin")}>
+            Sign in as admin
+          </button>
+          {error && <p className="rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">{error}</p>}
         </div>
-      </section>
-    </div>
+      ) : (
+        <>
+      <button type="button" className="mt-4 text-sm text-slate-600" onClick={() => choose(null)}>
+        Back
+      </button>
+      {audience === "customer" ? (
+      <div className="mt-6 flex gap-4 border-b border-slate-200 text-sm">
+        <button
+          type="button"
+          className={`pb-2 ${mode === "login" ? "border-b-2 border-slate-800 font-medium" : "text-slate-600"}`}
+          onClick={() => setMode("login")}
+        >
+          Sign in
+        </button>
+        <button
+          type="button"
+          className={`pb-2 ${mode === "register" ? "border-b-2 border-slate-800 font-medium" : "text-slate-600"}`}
+          onClick={() => setMode("register")}
+        >
+          Register
+        </button>
+      </div>
+      ) : (
+        <h2 className="mt-6 text-lg font-medium">Admin sign in</h2>
+      )}
+
+      <form className="mt-6 space-y-4" onSubmit={submit}>
+        <label className="block text-sm">
+          Username
+          <input
+            required
+            name="username"
+            autoComplete="username"
+            value={form.username}
+            onChange={update}
+            className={fieldClass}
+          />
+        </label>
+        {audience === "customer" && mode === "register" && (
+          <label className="block text-sm">
+            Email
+            <input
+              required
+              type="email"
+              name="email"
+              autoComplete="email"
+              value={form.email}
+              onChange={update}
+              className={fieldClass}
+            />
+          </label>
+        )}
+        <label className="block text-sm">
+          Password
+          <input
+            required
+            type="password"
+            name="password"
+            autoComplete={mode === "login" ? "current-password" : "new-password"}
+            minLength={8}
+            value={form.password}
+            onChange={update}
+            className={fieldClass}
+          />
+        </label>
+        {error && <p className="rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">{error}</p>}
+        <button type="submit" disabled={pending} className={`${primaryButton} w-full`}>
+          {pending ? "Please wait…" : audience === "admin" ? "Sign in as admin" : mode === "login" ? "Sign in" : "Create account"}
+        </button>
+      </form>
+        </>
+      )}
+    </main>
   );
 }
 
 function VehicleCard({ vehicle, pending, onPurchase }) {
   const soldOut = vehicle.quantity === 0;
   return (
-    <article className="flex flex-col rounded-2xl border border-line bg-card p-5 shadow-sm">
-      <div className={`mb-5 flex h-28 items-end rounded-xl bg-paper px-4 py-3 ${soldOut ? "opacity-60" : ""}`}>
-        <CarMark />
-        <p className="mb-1 ml-auto text-xs uppercase tracking-[0.18em] text-moss">{vehicle.category}</p>
-      </div>
-      <p className="text-xs uppercase tracking-[0.22em] text-brass-dark">{vehicle.make}</p>
-      <h3 className="font-display text-3xl">{vehicle.model}</h3>
-      <p className="mt-3 text-2xl font-semibold">{money(vehicle.price)}</p>
-      <p className={`mt-1 text-sm ${soldOut ? "text-danger" : "text-moss"}`}>
+    <article className="rounded border border-slate-200 bg-white p-4">
+      <p className="text-sm text-slate-500">{vehicle.category}</p>
+      <h3 className="text-lg font-semibold">
+        {vehicle.make} {vehicle.model}
+      </h3>
+      <p className="mt-2">{money(vehicle.price)}</p>
+      <p className={`mt-1 text-sm ${soldOut ? "text-red-700" : "text-slate-600"}`}>
         {soldOut ? "Out of stock" : `${vehicle.quantity} available`}
       </p>
       <button
         type="button"
         disabled={soldOut || pending}
         onClick={() => onPurchase(vehicle)}
-        className="mt-5 rounded-lg bg-brass px-4 py-2 font-medium text-ink disabled:cursor-not-allowed disabled:bg-line disabled:text-ink/50"
+        className={`${primaryButton} mt-4 disabled:cursor-not-allowed`}
       >
         {pending ? "Purchasing…" : soldOut ? "Unavailable" : "Purchase"}
       </button>
@@ -243,19 +232,13 @@ function VehicleCard({ vehicle, pending, onPurchase }) {
 
 function Showroom({ vehicles, loading, filters, onChange, onSearch, onClear, purchasingId, onPurchase }) {
   return (
-    <section className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h2 className="font-display text-4xl">Showroom</h2>
-          <p className="text-ink/70">Every listing stays visible, including cars that are sold out.</p>
-        </div>
-        <p className="text-sm text-ink/60">{loading ? "Loading…" : `${vehicles.length} vehicles`}</p>
+    <section className="space-y-4">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h2 className="text-xl font-semibold">Inventory</h2>
+        <p className="text-sm text-slate-600">{loading ? "Loading…" : `${vehicles.length} vehicles`}</p>
       </div>
 
-      <form
-        className="grid gap-3 rounded-2xl border border-line bg-card p-4 md:grid-cols-3 xl:grid-cols-6"
-        onSubmit={onSearch}
-      >
+      <form className="grid gap-3 border border-slate-200 bg-white p-4 md:grid-cols-3 xl:grid-cols-6" onSubmit={onSearch}>
         {[
           ["make", "Make"],
           ["model", "Model"],
@@ -270,22 +253,22 @@ function Showroom({ vehicles, loading, filters, onChange, onSearch, onClear, pur
               value={filters[name]}
               onChange={onChange}
               inputMode={name.includes("price") ? "decimal" : "text"}
-              className="mt-1 w-full rounded-lg border border-line px-3 py-2"
+              className={fieldClass}
             />
           </label>
         ))}
         <div className="flex items-end gap-2">
-          <button type="submit" className="rounded-lg bg-pine px-4 py-2 text-sm font-medium text-paper">
+          <button type="submit" className={primaryButton}>
             Search
           </button>
-          <button type="button" onClick={onClear} className="rounded-lg border border-line px-4 py-2 text-sm">
+          <button type="button" onClick={onClear} className={quietButton}>
             Clear
           </button>
         </div>
       </form>
 
       {!loading && vehicles.length === 0 && (
-        <p className="rounded-2xl border border-dashed border-line bg-card px-4 py-10 text-center text-ink/70">
+        <p className="border border-slate-200 bg-white px-4 py-8 text-center text-sm text-slate-600">
           No vehicles match this search.
         </p>
       )}
@@ -306,13 +289,10 @@ function Showroom({ vehicles, loading, filters, onChange, onSearch, onClear, pur
 
 function AdminPanel({ form, editing, onChange, onSubmit, onCancel, vehicles, restock, onRestockChange, onRestock, onEdit, onDelete, pending }) {
   return (
-    <section className="space-y-6">
-      <div>
-        <h2 className="font-display text-4xl">{editing ? "Edit vehicle" : "Add a vehicle"}</h2>
-        <p className="text-ink/70">These actions are limited to administrators. The server checks the role again.</p>
-      </div>
+    <section className="space-y-4">
+      <h2 className="text-xl font-semibold">{editing ? "Edit vehicle" : "Add a vehicle"}</h2>
 
-      <form className="grid gap-3 rounded-2xl border border-line bg-card p-4 md:grid-cols-3" onSubmit={onSubmit}>
+      <form className="grid gap-3 border border-slate-200 bg-white p-4 md:grid-cols-3" onSubmit={onSubmit}>
         {[
           ["make", "Make", "text"],
           ["model", "Model", "text"],
@@ -330,25 +310,25 @@ function AdminPanel({ form, editing, onChange, onSubmit, onCancel, vehicles, res
               step={name === "price" ? "0.01" : "1"}
               value={form[name]}
               onChange={onChange}
-              className="mt-1 w-full rounded-lg border border-line px-3 py-2"
+              className={fieldClass}
             />
           </label>
         ))}
         <div className="flex items-end gap-2">
-          <button disabled={pending} className="rounded-lg bg-pine px-4 py-2 text-sm font-medium text-paper disabled:opacity-60">
+          <button disabled={pending} className={primaryButton}>
             {editing ? "Save changes" : "Add vehicle"}
           </button>
           {editing && (
-            <button type="button" onClick={onCancel} className="rounded-lg border border-line px-4 py-2 text-sm">
+            <button type="button" onClick={onCancel} className={quietButton}>
               Cancel
             </button>
           )}
         </div>
       </form>
 
-      <div className="overflow-x-auto rounded-2xl border border-line bg-card">
+      <div className="overflow-x-auto border border-slate-200 bg-white">
         <table className="min-w-full text-left text-sm">
-          <thead className="border-b border-line text-xs uppercase tracking-wider text-ink/60">
+          <thead className="border-b border-slate-200 text-slate-600">
             <tr>
               <th className="px-4 py-3">Vehicle</th>
               <th className="px-4 py-3">Category</th>
@@ -360,7 +340,7 @@ function AdminPanel({ form, editing, onChange, onSubmit, onCancel, vehicles, res
           </thead>
           <tbody>
             {vehicles.map((vehicle) => (
-              <tr key={vehicle.id} className="border-b border-line last:border-0">
+              <tr key={vehicle.id} className="border-b border-slate-200 last:border-0">
                 <td className="px-4 py-3">
                   <span className="font-medium">{vehicle.make} {vehicle.model}</span>
                 </td>
@@ -376,17 +356,17 @@ function AdminPanel({ form, editing, onChange, onSubmit, onCancel, vehicles, res
                       step="1"
                       value={restock[vehicle.id] ?? "1"}
                       onChange={(event) => onRestockChange(vehicle.id, event.target.value)}
-                      className="w-20 rounded-lg border border-line px-2 py-1"
+                      className="w-20 rounded border border-slate-300 px-2 py-1"
                     />
-                    <button className="rounded-lg border border-line px-3 py-1">Add</button>
+                    <button className={quietButton}>Add</button>
                   </form>
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex gap-2">
-                    <button type="button" onClick={() => onEdit(vehicle)} className="rounded-lg border border-line px-3 py-1">
+                    <button type="button" onClick={() => onEdit(vehicle)} className={quietButton}>
                       Edit
                     </button>
-                    <button type="button" onClick={() => onDelete(vehicle)} className="rounded-lg border border-danger/40 px-3 py-1 text-danger">
+                    <button type="button" onClick={() => onDelete(vehicle)} className="rounded border border-red-300 px-3 py-2 text-sm text-red-700">
                       Delete
                     </button>
                   </div>
@@ -395,7 +375,7 @@ function AdminPanel({ form, editing, onChange, onSubmit, onCancel, vehicles, res
             ))}
             {vehicles.length === 0 && (
               <tr>
-                <td colSpan="6" className="px-4 py-8 text-center text-ink/60">
+                <td colSpan="6" className="px-4 py-8 text-center text-slate-600">
                   No vehicles yet. Add the first one above.
                 </td>
               </tr>
@@ -600,22 +580,16 @@ export default function App() {
 
   return (
     <div className="min-h-screen">
-      <header className="border-b border-black/10 bg-pine text-paper">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-4 px-4 py-4">
-          <div className="mr-auto flex items-center gap-3">
-            <CarMark />
-            <div>
-              <p className="font-display text-xl leading-none">Ashford Motor Co.</p>
-              <p className="text-xs uppercase tracking-[0.18em] text-brass">Inventory</p>
-            </div>
-          </div>
-          <nav className="flex flex-wrap items-center gap-2 text-sm">
+      <header className="border-b border-slate-200 bg-white">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-4 px-4 py-3">
+          <p className="mr-auto font-semibold">Ashford Motor Co.</p>
+          <nav className="flex flex-wrap items-center gap-4 text-sm">
             <button
               type="button"
               onClick={() => setView("showroom")}
-              className={`rounded-full px-4 py-2 ${view === "showroom" ? "bg-paper text-ink" : "text-paper"}`}
+              className={view === "showroom" ? "font-medium" : "text-slate-600"}
             >
-              Showroom
+              Inventory
             </button>
             {isAdmin && (
               <button
@@ -626,31 +600,24 @@ export default function App() {
                   setAppliedFilters(null);
                   loadVehicles(null);
                 }}
-                className={`rounded-full px-4 py-2 ${view === "manage" ? "bg-paper text-ink" : "text-paper"}`}
+                className={view === "manage" ? "font-medium" : "text-slate-600"}
               >
-                Manage inventory
+                Manage
               </button>
             )}
           </nav>
-          <div className="flex items-center gap-3 text-sm">
+          <div className="flex items-center gap-3 text-sm text-slate-600">
             <span>
-              {session.username}
-              <span className="ml-2 rounded-full bg-brass/20 px-2 py-0.5 text-xs uppercase tracking-wide text-brass">
-                {session.role}
-              </span>
+              {session.username} ({session.role})
             </span>
-            <button
-              type="button"
-              onClick={() => signOut("")}
-              className="rounded-full border border-paper/30 px-3 py-1"
-            >
+            <button type="button" onClick={() => signOut("")} className={quietButton}>
               Sign out
             </button>
           </div>
         </div>
       </header>
 
-      <main className="mx-auto flex max-w-6xl flex-col gap-5 px-4 py-8">
+      <main className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-6">
         <Notice notice={notice} error={error} />
         {view === "manage" && isAdmin ? (
           <AdminPanel

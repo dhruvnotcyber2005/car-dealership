@@ -1,27 +1,18 @@
 @import "tailwindcss";
 
-@theme {
-  --font-sans: "DM Sans", "Segoe UI", sans-serif;
-  --font-display: "Fraunces", Georgia, serif;
-  --color-ink: #17211c;
-  --color-pine: #1c3930;
-  --color-moss: #3d6b58;
-  --color-brass: #a68445;
-  --color-brass-dark: #8a6c34;
-  --color-paper: #f3f0e8;
-  --color-card: #fffcf8;
-  --color-line: #e4ddd0;
-  --color-danger: #8d3a32;
-}
-
 body {
   margin: 0;
   min-height: 100vh;
-  background: var(--color-paper);
-  color: var(--color-ink);
-  font-family: var(--font-sans);
+  background: #f8fafc;
+  color: #1e293b;
+  font-family: "Segoe UI", sans-serif;
 }
 
 #root {
   min-height: 100vh;
+}
+
+input,
+button {
+  font: inherit;
 }
